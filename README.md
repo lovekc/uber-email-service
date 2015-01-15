@@ -20,7 +20,7 @@ It is backed by Mailgun and Mandrill. It always try to use Mandrill first, and i
 * You can run it locally by ```python view.py```  and you can access it on http://127.0.0.1:5000/
 
 ##Usage
-You can use the [live website](http://lovekc.pythonanywhere.com)  or make a post to the ```/``` end point directly.
+You can use the [live site](http://lovekc.pythonanywhere.com)  or make a post to the ```/``` end point directly.
 
 e.g.
 
