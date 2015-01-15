@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Send Email</title>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='view.css') }}" media="all">
+<script type="text/javascript" src= "{{ url_for('static', filename='view.js') }}" ></script>
+
+</head>
+<body id="main_body" >
+
+	<img id="top" src="{{ url_for('static', filename='top.png') }}" alt="">
+	<div id="form_container">
+
+		<h1><a>Send Email</a></h1>
+		<form id="form_955446" class="appnitro"  method="post" action="/">
+					<div class="form_description">
+			<h2>Send Email</h2>
+			<p>Send Email for free! No login required</p>
+		</div>
+			<ul >
+
+					<li id="li_1" >
+		<label class="description" for="element_1">To: </label>
+		<div>
+			<input id="element_1" name="to_email" class="element text medium" type="text" maxlength="255" value=""/>
+		</div><p class="guidelines" id="guide_1"><small>Required</small></p>
+		</li>		<li id="li_2" >
+		<label class="description" for="element_2">From </label>
+		<div>
+			<input id="element_2" name="from_email" class="element text medium" type="text" maxlength="255" value=""/>
+		</div><p class="guidelines" id="guide_2"><small>Required</small></p>
+		</li>		<li id="li_4" >
+		<label class="description" for="element_4">Subject </label>
+		<div>
+			<input id="element_4" name="subject" class="element text large" type="text" maxlength="255" value=""/>
+		</div><p class="guidelines" id="guide_4"><small>Required.Cannot be longer than 1000 characters</small></p>
+		</li>		<li id="li_3" >
+		<label class="description" for="element_3">Content </label>
+		<div>
+			<textarea id="element_3" name="content" class="element textarea large"></textarea>
+		</div><p class="guidelines" id="guide_3"><small>Required. Cannot be longer than 10000 characters</small></p>
+		</li><li id="li_5" >
+		{% if message %}
+            		<label class="description2" >{{ message }}</label>
+        {% endif %}
+		</li>
+					<li class="buttons">
+			    <input type="hidden" name="form_id" value="955446" />
+
+				<input id="saveForm" class="button_text" type="submit" name="submit" value="Send Email" />
+		</li>
+			</ul>
+		</form>
+
+	</div>
+	<img id="bottom" src="{{ url_for('static', filename='bottom.png') }}" alt="">
+	</body>
+</html>
