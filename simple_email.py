@@ -61,7 +61,7 @@ def send_email(message_data):
         logger.debug("Returning result from mailgun:: status: %s, message %s " % (mailgun_result.status, mailgun_result.message))
         return mailgun_result
 
-    if mailgun_result.status == "rejected":
+    if mandrill_result.status == "rejected":
         logger.debug("Returning result from mandrill:: status: %s, message: %s  " % (mandrill_result.status, mandrill_result.message))
         return mandrill_result
 
@@ -71,7 +71,7 @@ def send_email(message_data):
 class SimpleEmail(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, debug = False):
+    def __init__(self, debug=False):
         if debug:
             logger.handlers = []
             logger.addHandler(logging.StreamHandler())
@@ -206,9 +206,9 @@ def simple_validate_send_request(message_data):
     if message_data['subject'] == "":
         return ErrorResult("subject cannot be empty")
     elif len(message_data['subject']) > MAX_SUBJECT_LENGTH:
-        return ErrorResult("subject cannot be longer than" + MAX_SUBJECT_LENGTH)
+        return ErrorResult("subject cannot be more than %s characters" % MAX_SUBJECT_LENGTH)
     if message_data['content'] == "":
         return ErrorResult("content cannot be empty")
     elif len(message_data['content']) > MAX_CONTENT_LENGTH:
-        return ErrorResult("content cannot be longer than" + MAX_CONTENT_LENGTH)
+        return ErrorResult("content cannot be more than %s characters" % MAX_CONTENT_LENGTH)
 

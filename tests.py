@@ -1,7 +1,7 @@
-from simple_email import MandrillEmail, MailgunEmail, simple_validate_send_request
+from simple_email import MandrillEmail, MailgunEmail, simple_validate_send_request, ErrorResult, Result
 from view import app
 from mandrill import ValidationError
-import unittest, mock
+import unittest, mock, simple_email
 
 valid_message = {
     'to_email': 'dawen.uiuc@gmail.com',
@@ -45,12 +45,25 @@ message_with_empty_content = {
     'content' : ''
     }
 
+message_with_empty_too_long_content = {
+    'to_email': 'dawen.uiuc@gmail.com',
+    'from_email': 'uber@gmail.com',
+    'subject': 'subject',
+    'content': 10001*'x'
+    }
 
 message_with_empty_subject = {
     'to_email': 'dawen.uiuc@gmail.com',
     'from_email': 'uber@gmail.com',
     'subject': '',
     'content': 'content with no subject to send '
+    }
+
+message_with_empty_too_long_subject = {
+    'to_email': 'dawen.uiuc@gmail.com',
+    'from_email': 'uber@gmail.com',
+    'subject': 1001*'x',
+    'content': 'content to send '
     }
 
 
@@ -134,7 +147,7 @@ class MailgunAndMandrillTests(unittest.TestCase):
 
         send.side_effect = empty_from_email_side_effect()
         result = MandrillEmail().send(message_with_empty_from_email)
-        assert  result.status_code == 400
+        assert result.status_code == 400
         assert result.status == 'rejected'
         assert 'invalid-sender' in result.message
 
@@ -147,6 +160,52 @@ def test_simple_validate_send_request():
     assert 'invalid sender email' == simple_validate_send_request(message_with_invalid_from_email).message
     assert 'subject cannot be empty' == simple_validate_send_request(message_with_empty_subject).message
     assert 'content cannot be empty' == simple_validate_send_request(message_with_empty_content).message
+    assert 'subject cannot be more than 1000 characters' == simple_validate_send_request(message_with_empty_too_long_subject).message
+    assert 'content cannot be more than 10000 characters' == simple_validate_send_request(message_with_empty_too_long_content).message
+
+
+@mock.patch.object(simple_email, 'simple_validate_send_request')
+@mock.patch.object(MailgunEmail, 'send')
+def test_using_mandrill(mailgun_send, validator):
+    mailgun_send.return_value = ErrorResult("error message")
+    validator.return_value = None
+    result = simple_email.send_email(valid_message)
+    assert_success_result(result)
+
+
+@mock.patch.object(simple_email, 'simple_validate_send_request')
+@mock.patch.object(MandrillEmail, 'send')
+def test_using_mailgun(mandrill_send, validator):
+    mandrill_send.return_value = ErrorResult("error message")
+    validator.return_value = None
+    result = simple_email.send_email(valid_message)
+    assert_success_result(result)
+
+@mock.patch.object(simple_email, 'simple_validate_send_request')
+@mock.patch.object(MailgunEmail, 'send')
+@mock.patch.object(MandrillEmail, 'send')
+def test_rejected_status(mandrill_send, mailgun_send, validator):
+    mandrill_send.return_value = Result('rejected', 'rejected due to spam')
+    validator.return_value = None
+    mailgun_send.return_value = ErrorResult("error message")
+    result = simple_email.send_email(valid_message)
+    assert result.status_code == 400
+    assert result.status == 'rejected'
+    assert result.message == 'rejected due to spam'
+
+
+@mock.patch.object(simple_email, 'simple_validate_send_request')
+@mock.patch.object(MailgunEmail, 'send')
+@mock.patch.object(MandrillEmail, 'send')
+def test_both_mailgun_mandrill_error(mandrill_send, mailgun_send, validator):
+    mandrill_send.return_value = ErrorResult("mandrill error message")
+    validator.return_value = None
+    mailgun_send.return_value = ErrorResult("mailgun error message")
+    result = simple_email.send_email(valid_message)
+    assert result.status == 'error'
+    assert result.status_code == 400
+    assert result.message == "Sorry! We cannot send email for now. Please try later."
+
 
 
 def success_response_side_effect():
@@ -185,10 +244,18 @@ def assert_success_result(result, message="Email sent successfully!"):
     assert result.status == "success"
 
 
-test_case = unittest.FunctionTestCase(test_simple_validate_send_request)
+testCase0 = unittest.FunctionTestCase(test_simple_validate_send_request)
+testCase1 = unittest.FunctionTestCase(test_using_mailgun)
+testCase2 = unittest.FunctionTestCase(test_using_mandrill)
+testCase3 = unittest.FunctionTestCase(test_rejected_status)
+testCase4 = unittest.FunctionTestCase(test_both_mailgun_mandrill_error)
 
 if __name__ == '__main__':
     test_suite = unittest.TestSuite()
-    test_suite.addTest(test_case)
+    test_suite.addTest(testCase0)
+    test_suite.addTest(testCase1)
+    test_suite.addTest(testCase2)
+    test_suite.addTest(testCase3)
+    test_suite.addTest(testCase4)
     unittest.TextTestRunner().run(test_suite)
     unittest.main()
